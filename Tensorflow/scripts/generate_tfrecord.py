@@ -26,7 +26,8 @@ import argparse
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'    # Suppress TensorFlow logging (1)
 import tensorflow.compat.v1 as tf
 from PIL import Image
-from object_detection.utils import dataset_util, label_map_util
+import dataset_util
+import label_map_util
 from collections import namedtuple
 
 # Initiate argument parser
@@ -58,8 +59,17 @@ args = parser.parse_args()
 if args.image_dir is None:
     args.image_dir = args.xml_dir
 
-label_map = label_map_util.load_labelmap(args.labels_path)
-label_map_dict = label_map_util.get_label_map_dict(label_map)
+# Validate required arguments early and provide a clear message
+if not args.xml_dir or not args.labels_path or not args.output_path:
+    parser.print_help()
+    raise SystemExit('Missing required arguments: xml_dir, labels_path, and output_path are required.')
+
+try:
+    label_map = label_map_util.load_labelmap(args.labels_path)
+    label_map_dict = label_map_util.get_label_map_dict(label_map)
+except Exception as e:
+    print("Error loading label map from '{}': {}".format(args.labels_path, e))
+    raise
 
 
 def xml_to_csv(path):
@@ -165,4 +175,4 @@ def main(_):
 
 
 if __name__ == '__main__':
-    tf.app.run()
+    main(None)
